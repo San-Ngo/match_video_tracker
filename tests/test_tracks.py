@@ -88,3 +88,9 @@ def test_missing_colour_never_joins():
             (3, 29, 102, 100, 122, 200, 0.9, math.nan, math.nan)]
     _, joins = link_broken_tracks(to_table(rows), fps=60)
     assert joins == 0
+
+
+def test_fill_gaps_leaves_long_holes_empty():
+    rows = [(1, 7, 90, 100, 110, 200, 0.9, *RED), (10, 7, 120, 100, 140, 200, 0.9, *RED)]   # 8 frames missing
+    clean = fill_gaps(to_table(rows), max_gap=5)
+    assert list(clean["frame"]) == [1, 10]          # too long to guess: nothing invented

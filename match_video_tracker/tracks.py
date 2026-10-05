@@ -94,11 +94,19 @@ def drop_short(df, min_frames):
     return df[seen >= min_frames]
 
 
+def short_holes(missing, max_len):
+    """True for the missing rows that belong to a hole of at most max_len rows in a row."""
+    hole_id = (~missing).cumsum()                       # rows of the same hole share a number
+    hole_len = missing.groupby(hole_id).transform("sum")    # how long each row's hole is
+    return missing & (hole_len <= max_len)
+
+
 def fill_gaps(df, max_gap=60):
     """Fill the holes in each player's track with straight lines (interpolate).
 
     A hole is a frame where we kept the ID but YOLO missed the player.
-    Only holes of up to max_gap frames are filled. Filled rows get filled=True.
+    Only holes of up to max_gap frames are filled; longer holes stay empty, because a
+    straight line over a long time is a guess, not the player. Filled rows get filled=True.
     """
     pieces = []
     for pid, track in df.groupby("id"):
@@ -107,7 +115,9 @@ def fill_gaps(df, max_gap=60):
         track = track.reindex(every_frame)      # the missing frames appear as empty (NaN) rows
         track.index.name = "frame"
         track["filled"] = track["conf"].isna()  # remember which rows we are about to invent
-        track[POSITION] = track[POSITION].interpolate(limit=max_gap, limit_area="inside")
+        fill = short_holes(track["foot_x"].isna(), max_gap)
+        guess = track[POSITION].interpolate(limit_area="inside")
+        track.loc[fill, POSITION] = guess.loc[fill]
         track["id"] = pid
         pieces.append(track.dropna(subset=["foot_x"]).reset_index())
     return pd.concat(pieces, ignore_index=True)

@@ -118,3 +118,56 @@ def draw_teams(frame, players, colors, names):
     on_screen = Counter(team for *_, team in players)      # how many of each team in this frame
     put_legend(out, [(colors[t], f"{name}: {on_screen[t]}") for t, name in names.items()])
     return out
+
+
+def draw_triangle(out, tip_x, tip_y, size, color, filled=True):
+    """A triangle pointing down at (tip_x, tip_y): filled with a black outline, or only
+    a coloured outline (filled=False) when we are guessing."""
+    pts = np.array([(tip_x, tip_y), (tip_x - size, tip_y - 2 * size), (tip_x + size, tip_y - 2 * size)],
+                   dtype=np.int32)
+    if filled:
+        cv2.fillPoly(out, [pts], color, cv2.LINE_AA)
+        cv2.polylines(out, [pts], True, BLACK, 1, cv2.LINE_AA)
+    else:
+        cv2.polylines(out, [pts], True, color, 2, cv2.LINE_AA)
+
+
+def put_possession_bar(out, shares, colors):
+    """Bottom-right: one bar split in the team colours, with each team's possession %."""
+    scale = max(0.6, out.shape[1] / 1600)
+    thick = max(2, round(2 * scale))
+    h, w = out.shape[:2]
+    bar_w, bar_h = int(300 * scale), int(30 * scale)
+    x0, y0 = w - bar_w - 20, h - bar_h - 20
+    cv2.rectangle(out, (x0 - 10, y0 - 10), (x0 + bar_w + 10, y0 + bar_h + 10), BLACK, -1)
+    split = x0 + int(bar_w * shares[0])
+    cv2.rectangle(out, (x0, y0), (split, y0 + bar_h), colors[0], -1)
+    cv2.rectangle(out, (split, y0), (x0 + bar_w, y0 + bar_h), colors[1], -1)
+    for text, color, x in ((f"{shares[0]:.0%}", colors[0], x0 + 8),
+                           (f"{shares[1]:.0%}", colors[1], None)):
+        (tw, th), _ = cv2.getTextSize(text, FONT, 0.7 * scale, thick)
+        x = x if x is not None else x0 + bar_w - tw - 8     # team 2's number on the right
+        cv2.putText(out, text, (x, y0 + (bar_h + th) // 2), FONT, 0.7 * scale,
+                    text_color(color), thick, cv2.LINE_AA)
+
+
+def draw_possession(frame, players, colors, names, ball, holder, shares):
+    """M4: the M3 picture, plus a yellow triangle over the ball, a triangle in the team's
+    colour over the player who has it, and the possession bar.
+
+    ball = (x, y, seen) or None: seen=True when YOLO found it in this frame (solid
+    triangle), False when it is a filled-in guess (outline only).
+    holder = the ID of the player on the ball, or None.
+    shares = {0: share of team 1, 1: share of team 2}, or None before anyone had the ball.
+    """
+    out = draw_teams(frame, players, colors, names)
+    scale, _ = marker_size(out)
+    if ball is not None:
+        x, y, seen = ball
+        draw_triangle(out, int(x), int(y - 10 * scale), int(9 * scale), (0, 230, 255), filled=seen)
+    for track_id, x1, y1, x2, y2, team in players:
+        if track_id == holder:
+            draw_triangle(out, int((x1 + x2) / 2), int(y1 - 6 * scale), int(9 * scale), colors[team])
+    if shares is not None:
+        put_possession_bar(out, shares, colors)
+    return out

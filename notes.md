@@ -19,3 +19,15 @@ One short entry per milestone. These notes become the README's "How it works" se
 - What I changed:
 - What happened:
 - What I learned:
+
+## Week 4 · M4 Camera motion
+
+- What I changed:
+- What happened:
+- What I learned:
+
+## Week 5 · M5 Ball and possession
+
+- What I changed:
+- What happened:
+- What I learned:

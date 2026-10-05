@@ -109,7 +109,7 @@ def main():
     # 3. repair: cut IDs that jumped to an opponent, then join the pieces with M2's link step
     df, cuts = split_team_switches(df, centres, min_frames=int(fps / 2))
     df, joins = link_broken_tracks(df, fps)
-    df = smooth(fill_gaps(df, max_gap=int(fps)), window=5)     # fill the holes the joins left
+    df = smooth(fill_gaps(df, max_gap=int(1.5 * fps)), window=5)   # fill the holes the joins left (up to 1.5 s, like the joins)
 
     players = label_players(df, centres)
     df["team"] = df["id"].map(players["team"]).fillna(OTHER).astype(int)
