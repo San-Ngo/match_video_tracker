@@ -35,6 +35,17 @@ pytest -q
 
 Put your own match clips in `data/`. Videos and model weights stay on your computer and are not stored in the repo.
 
+## Run it
+
+Activate the environment first (`source .venv/bin/activate`), then:
+
+```bash
+python m1_detect.py data/frame.png
+python m1_detect.py data/clip.mov
+```
+
+Milestone 1 saves `outputs/m1_detect.jpg` (or `.mp4`). Green boxes are players; thin red boxes are people removed as crowd.
+
 ## Project structure
 
 ```
@@ -43,6 +54,7 @@ tests/                 pytest tests
 data/                  your clips (not on GitHub)
 outputs/               results (not on GitHub)
 practice/              small learning scripts
+m1_detect.py           Milestone 1: detect players, remove the crowd
 notes.md               what I learned each week
 ```
 
