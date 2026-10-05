@@ -20,7 +20,7 @@ Releases: v1 = M1–M3, v2 = M4–M6, v3 = M7.
 
 ## Tech stack
 
-Python, NumPy, OpenCV, Ultralytics YOLO, BoT-SORT tracking, pandas and pytest so far. scikit-learn and Streamlit join as the milestones need them.
+Python, NumPy, OpenCV, Ultralytics YOLO, TrackTrack and BoT-SORT tracking, pandas and pytest so far. scikit-learn and Streamlit join as the milestones need them.
 
 ## Setup (macOS)
 
@@ -46,7 +46,7 @@ python m2_track.py data/clip.mov
 ```
 
 - **M1** saves `outputs/m1_detect.jpg` (or `.mp4`). Green boxes are players; thin red boxes are people removed as crowd.
-- **M2** saves `outputs/m2_track.mp4` with an ID under every player, plus `outputs/tracks.csv` (one row per player per frame) and `outputs/tracks_clean.csv` (short gaps filled, paths smoothed).
+- **M2** saves `outputs/m2_track.mp4` with an ID under every player (TrackTrack by default; add `--tracker trackers/botsort.yaml` to compare), plus `outputs/tracks.csv` (one row per player per frame) and `outputs/tracks_clean.csv` (short gaps filled, paths smoothed).
 
 ## Project structure
 
@@ -56,7 +56,7 @@ tests/                 pytest tests
 data/                  your clips (not on GitHub)
 outputs/               results (not on GitHub)
 practice/              small learning scripts
-trackers/              tracker settings (BoT-SORT)
+trackers/              tracker settings (TrackTrack, BoT-SORT)
 m1_detect.py           Milestone 1: detect players, remove the crowd
 m2_track.py            Milestone 2: track players with IDs
 notes.md               what I learned each week

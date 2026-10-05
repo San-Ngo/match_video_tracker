@@ -26,7 +26,8 @@ def main():
     parser = argparse.ArgumentParser(description="Milestone 2: track the players")
     parser.add_argument("source", help="a video (.mp4, .mov)")
     parser.add_argument("--model", default="yolo26m.pt", help="YOLO weights")
-    parser.add_argument("--tracker", default="trackers/botsort.yaml", help="tracker settings file")
+    parser.add_argument("--tracker", default="trackers/tracktrack.yaml",
+                        help="tracker settings: trackers/tracktrack.yaml or trackers/botsort.yaml")
     parser.add_argument("--conf", type=float, default=0.1, help="low on purpose: the tracker uses weak boxes")
     parser.add_argument("--imgsz", type=int, default=1280, help="bigger finds far-away players but is slower")
     parser.add_argument("--min-grass", type=float, default=0.15, help="share of grass needed at the feet")

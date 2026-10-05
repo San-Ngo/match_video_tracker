@@ -1,0 +1,37 @@
+# TrackTrack tracker settings (a copy of Ultralytics' tracktrack.yaml). This is M2's default tracker.
+# Paper: "Focusing on Tracks for Online Multi-Object Tracking" (CVPR 2025).
+# On clip1's dribble it kept the scorer's ID, and the clip had 26 IDs instead of 68 with BoT-SORT.
+#
+# Why it switches IDs less than BoT-SORT:
+#  - it matches in several rounds, the most certain pairs first (iterative assignment)
+#  - it refuses to start a new ID on a box that overlaps a player it already tracks (TAI)
+#  - a new ID needs 3 frames in a row before it counts (min_track_len)
+
+tracker_type: tracktrack
+track_high_thresh: 0.6    # boxes at least this confident are matched first
+track_low_thresh: 0.25    # weaker boxes (half-hidden players) get a second chance
+new_track_thresh: 0.7     # a box with no match starts a new ID only if it is this confident
+track_buffer: 90          # frames a lost player keeps his ID (90 frames = 1.5 s in a 60 fps clip)
+match_thresh: 0.7         # starting match threshold for the rounds of matching
+lost_match_thr: 0.0       # 0 = off. Raise above match_thresh (e.g. 0.9) for long occlusions
+
+# How much each clue counts when matching a box to a player
+iou_weight: 0.5           # box overlap
+reid_weight: 0.5          # appearance (falls back to overlap when ReID is off)
+conf_weight: 0.1          # detection confidence
+angle_weight: 0.05        # direction of movement
+
+# Rounds of matching (iterative assignment)
+penalty_p: 0.2
+penalty_q: 0.4
+reduce_step: 0.05
+
+# Track-aware initialization (TAI): no new ID on top of a player we already track
+tai_thr: 0.55
+min_track_len: 3
+
+gmc_method: sparseOptFlow # follows the camera's movement (pans)
+
+# ReID (matching by appearance) is off: on our clips it made IDs worse, not better
+with_reid: False
+model: auto
