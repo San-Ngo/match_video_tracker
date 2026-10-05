@@ -37,3 +37,9 @@ One short entry per milestone. These notes become the README's "How it works" se
 - What I changed:
 - What happened:
 - What I learned:
+
+## Week 7 · M7 Studio app
+
+- What I changed:
+- What happened:
+- What I learned:

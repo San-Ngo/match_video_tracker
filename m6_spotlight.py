@@ -21,11 +21,10 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from match_video_tracker.camera import from_pitch, to_pitch
-from match_video_tracker.colour import shirt_to_bgr
-from match_video_tracker.draw import BLACK, FONT, text_color
+from match_video_tracker.draw import name_tag
 from match_video_tracker.grass import grass_mask
-from match_video_tracker.spotlight import TRAIL_SECONDS, draw_spotlight
+from match_video_tracker.spotlight import (TRAIL_SECONDS, box_at, draw_spotlight, follow,
+                                           spotlight_colour, trail_at)
 from match_video_tracker.teams import OTHER
 from match_video_tracker.video import open_writer, video_info
 
@@ -40,18 +39,6 @@ def pick_player(tracks):
         if len(holder):
             return int(holder.mode().iat[0])
     return int(tracks.groupby("id")["frame"].count().idxmax())
-
-
-def name_tag(out, box, label, color):
-    """A small tag with his ID above his head."""
-    scale = max(0.5, out.shape[1] / 1920)
-    thick = max(2, round(2 * scale))
-    x1, y1, x2, _ = box
-    (tw, th), _ = cv2.getTextSize(label, FONT, 0.7 * scale, thick)
-    cx, top = int((x1 + x2) / 2), int(y1) - int(12 * scale)
-    cv2.rectangle(out, (cx - tw // 2 - 6, top - th - 10), (cx + tw // 2 + 6, top), color, -1)
-    cv2.rectangle(out, (cx - tw // 2 - 6, top - th - 10), (cx + tw // 2 + 6, top), BLACK, 1)
-    cv2.putText(out, label, (cx - tw // 2, top - 5), FONT, 0.7 * scale, text_color(color), thick, cv2.LINE_AA)
 
 
 def main():
@@ -72,16 +59,13 @@ def main():
     camera = pd.read_csv(OUTPUTS / "camera.csv", index_col="frame")
 
     pid = args.player if args.player is not None else pick_player(tracks)
-    me = tracks[tracks["id"] == pid].sort_values("frame")
+    me = follow(tracks, camera, pid)
     if me.empty:
         raise SystemExit(f"There is no player {pid}. Open outputs/m3_teams.mp4 to see the IDs.")
-    me = to_pitch(me, camera, x="foot_x_smooth", y="foot_y_smooth").set_index("frame")
 
     players = pd.read_csv(OUTPUTS / "teams.csv", index_col="id")
     team = players.loc[pid, "team"] if pid in players.index else OTHER
-    kit = players[players["team"] == team][["shirt_a", "shirt_b"]].median()
-    color = shirt_to_bgr(*kit, lightness=170) if team != OTHER else (255, 255, 255)
-    cuts = camera.index[camera["cut"]].tolist()             # a trail never crosses a scene cut
+    color = spotlight_colour(players, team)
     keep = int(args.seconds * fps)
 
     writer = open_writer(OUTPUTS / "m6_spotlight.mp4", fps, (w, h))
@@ -92,11 +76,8 @@ def main():
         if not ok:
             break
         n += 1
-        start = max([n - keep] + [c for c in cuts if c <= n])
-        recent = me.loc[(me.index >= start) & (me.index <= n), ["pitch_x", "pitch_y"]]
-        trail = from_pitch(recent.to_numpy(), camera, n) if len(recent) > 1 else []
-        box = tuple(me.loc[n, ["x1", "y1", "x2", "y2"]]) if n in me.index else None
-        out = draw_spotlight(frame, grass_mask(frame), box, trail, color)
+        box = box_at(me, n)
+        out = draw_spotlight(frame, grass_mask(frame), box, trail_at(me, camera, n, keep), color)
         if box is not None:
             name_tag(out, box, str(pid), color)
         writer.write(out)

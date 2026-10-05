@@ -67,3 +67,37 @@ def draw_spotlight(frame, grass, box, trail, color):
     if box is not None:
         ring_layer(alpha, box, scale)
     return blend(frame, alpha, grass.astype(np.float32), color)
+
+
+def follow(tracks, camera, pid):
+    """One player's rows (indexed by frame) with his smoothed feet in pitch coordinates."""
+    from match_video_tracker.camera import to_pitch           # here, to keep this file light
+    me = tracks[tracks["id"] == pid].sort_values("frame")
+    if me.empty:
+        return me
+    return to_pitch(me, camera, x="foot_x_smooth", y="foot_y_smooth").set_index("frame")
+
+
+def trail_at(me, camera, n, keep_frames):
+    """His trail for frame n, in frame n's pixels: the last keep_frames frames of his run,
+    never across a scene cut (the pitch coordinates start again after a cut)."""
+    from match_video_tracker.camera import from_pitch
+    cuts = camera.index[camera["cut"] & (camera.index <= n)]
+    start = max([n - keep_frames] + list(cuts))
+    recent = me.loc[(me.index >= start) & (me.index <= n), ["pitch_x", "pitch_y"]]
+    return from_pitch(recent.to_numpy(), camera, n) if len(recent) > 1 else []
+
+
+def box_at(me, n):
+    """His box (x1, y1, x2, y2) in frame n, or None if he is not in it."""
+    return tuple(me.loc[n, ["x1", "y1", "x2", "y2"]]) if n in me.index else None
+
+
+def spotlight_colour(players, team, other=(255, 255, 255)):
+    """A bright version of the team's shirt colour (players = teams.csv), white for OTHER."""
+    from match_video_tracker.colour import shirt_to_bgr
+    from match_video_tracker.teams import OTHER
+    if team == OTHER:
+        return other
+    kit = players[players["team"] == team][["shirt_a", "shirt_b"]].median()
+    return shirt_to_bgr(*kit, lightness=170)

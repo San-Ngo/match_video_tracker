@@ -171,3 +171,15 @@ def draw_possession(frame, players, colors, names, ball, holder, shares):
     if shares is not None:
         put_possession_bar(out, shares, colors)
     return out
+
+
+def name_tag(out, box, label, color):
+    """A small tag with his ID above his head."""
+    scale, thick = marker_size(out)
+    scale = max(scale, 0.5)
+    x1, y1, x2, _ = box
+    (tw, th), _ = cv2.getTextSize(label, FONT, 0.7 * scale, thick)
+    cx, top = int((x1 + x2) / 2), int(y1) - int(12 * scale)
+    cv2.rectangle(out, (cx - tw // 2 - 6, top - th - 10), (cx + tw // 2 + 6, top), color, -1)
+    cv2.rectangle(out, (cx - tw // 2 - 6, top - th - 10), (cx + tw // 2 + 6, top), BLACK, 1)
+    cv2.putText(out, label, (cx - tw // 2, top - 5), FONT, 0.7 * scale, text_color(color), thick, cv2.LINE_AA)
