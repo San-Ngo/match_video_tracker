@@ -8,8 +8,8 @@ Football match analysis from broadcast video: detect every player, track them ac
 
 | Milestone | What it does | Status |
 | --- | --- | --- |
-| M1 Detect | Find the players in a frame and remove the crowd | 🔨 In progress |
-| M2 Track | Keep one ID per player across frames | ⏳ |
+| M1 Detect | Find the players in a frame and remove the crowd | ✅ Done |
+| M2 Track | Keep one ID per player across frames | 🔨 In progress |
 | M3 Teams | Split the players into two teams by shirt colour | ⏳ |
 | M4 Ball and possession | Find the ball and compute possession | ⏳ |
 | M5 Camera motion | Separate camera movement from player movement | ⏳ |
@@ -20,7 +20,7 @@ Releases: v1 = M1–M3, v2 = M4–M6, v3 = M7.
 
 ## Tech stack
 
-Python, NumPy, OpenCV, Ultralytics YOLO and pytest so far. Tracking (BoT-SORT), pandas, scikit-learn and Streamlit join as the milestones need them.
+Python, NumPy, OpenCV, Ultralytics YOLO, BoT-SORT tracking, pandas and pytest so far. scikit-learn and Streamlit join as the milestones need them.
 
 ## Setup (macOS)
 
@@ -42,9 +42,11 @@ Activate the environment first (`source .venv/bin/activate`), then:
 ```bash
 python m1_detect.py data/frame.png
 python m1_detect.py data/clip.mov
+python m2_track.py data/clip.mov
 ```
 
-Milestone 1 saves `outputs/m1_detect.jpg` (or `.mp4`). Green boxes are players; thin red boxes are people removed as crowd.
+- **M1** saves `outputs/m1_detect.jpg` (or `.mp4`). Green boxes are players; thin red boxes are people removed as crowd.
+- **M2** saves `outputs/m2_track.mp4` with an ID under every player, plus `outputs/tracks.csv` (one row per player per frame) and `outputs/tracks_clean.csv` (short gaps filled, paths smoothed).
 
 ## Project structure
 
@@ -54,7 +56,9 @@ tests/                 pytest tests
 data/                  your clips (not on GitHub)
 outputs/               results (not on GitHub)
 practice/              small learning scripts
+trackers/              tracker settings (BoT-SORT)
 m1_detect.py           Milestone 1: detect players, remove the crowd
+m2_track.py            Milestone 2: track players with IDs
 notes.md               what I learned each week
 ```
 

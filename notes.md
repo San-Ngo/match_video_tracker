@@ -7,3 +7,9 @@ One short entry per milestone. These notes become the README's "How it works" se
 - What I changed:
 - What happened:
 - What I learned:
+
+## Week 2 · M2 Track
+
+- What I changed:
+- What happened:
+- What I learned:

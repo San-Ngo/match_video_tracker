@@ -13,6 +13,7 @@ import cv2
 from match_video_tracker.detect import detect_people, load_model, pick_device, split_players_and_crowd
 from match_video_tracker.draw import draw_people
 from match_video_tracker.grass import grass_mask
+from match_video_tracker.video import open_writer, video_info
 
 VIDEO_TYPES = {".mp4", ".mov", ".m4v", ".avi", ".mkv"}
 OUTPUTS = Path("outputs")
@@ -38,25 +39,13 @@ def run_on_image(model, path, args):
     print(f"{len(players)} players, {len(crowd)} crowd removed -> outputs/m1_detect.jpg")
 
 
-def open_writer(path, fps, size):
-    """Try H.264 first (plays in QuickTime), then MPEG-4 as a backup."""
-    for codec in ("avc1", "mp4v"):
-        writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*codec), fps, size)
-        if writer.isOpened():
-            return writer
-    raise SystemExit("Could not create the output video.")
-
-
 def run_on_video(model, path, args):
     cap = cv2.VideoCapture(str(path))
     if not cap.isOpened():
         raise SystemExit(f"Could not open {path}. Check the file name and folder.")
 
-    fps = cap.get(cv2.CAP_PROP_FPS) or 25
-    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    writer = open_writer(OUTPUTS / "m1_detect.mp4", fps, (w, h))    # (width, height): Skill 3, step 3
+    fps, w, h, total = video_info(cap)
+    writer = open_writer(OUTPUTS / "m1_detect.mp4", fps, (w, h))
 
     n = 0
     while True:
