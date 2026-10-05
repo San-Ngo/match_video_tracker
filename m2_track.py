@@ -2,24 +2,80 @@
 
 Run it from the project folder, with your .venv active:
     python m2_track.py data/clip.mov
+
+It works in two passes over the video:
+    1. analyse: YOLO + tracker on every frame, plus each player's shirt colour
+    2. clean up with pandas: join broken tracks, drop flickers, fill holes, smooth
+    3. draw:    read the video again and draw the CLEAN tracks
+
 It saves three files in outputs/:
     m2_track.mp4      the video with an ID under every player
     tracks.csv        one row per player per frame, straight from the tracker
-    tracks_clean.csv  the same, with short holes filled and the paths smoothed
+    tracks_clean.csv  after joining broken tracks, filling holes and smoothing
 """
 import argparse
 from pathlib import Path
 
 import cv2
 
+from match_video_tracker.colour import shirt_colour, to_lab
 from match_video_tracker.detect import load_model, pick_device
 from match_video_tracker.draw import draw_tracks
 from match_video_tracker.grass import foot_grass_fraction, grass_mask
 from match_video_tracker.track import track_people
-from match_video_tracker.tracks import drop_short, fill_gaps, id_summary, smooth, to_table
+from match_video_tracker.tracks import (drop_short, fill_gaps, id_summary, link_broken_tracks,
+                                        renumber, smooth, to_table)
 from match_video_tracker.video import open_writer, video_info
 
 OUTPUTS = Path("outputs")
+
+
+def analyse(model, args):
+    """Pass 1: track every player and measure his shirt colour. Returns rows and fps."""
+    cap = cv2.VideoCapture(args.source)
+    if not cap.isOpened():
+        raise SystemExit(f"Could not open {args.source}. Check the file name and folder.")
+    fps, w, h, total = video_info(cap)
+
+    rows = []           # one (frame, id, x1, y1, x2, y2, conf, shirt_a, shirt_b) per player per frame
+    n = 0
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        n += 1
+        tracks = track_people(model, frame, tracker=args.tracker, conf=args.conf,
+                              imgsz=args.imgsz, device=args.device)
+        mask = grass_mask(frame)
+        lab = to_lab(frame)
+        for t in tracks:
+            box = t[1:5]
+            if foot_grass_fraction(mask, box) >= args.min_grass:   # same crowd filter as M1
+                rows.append((n, *t, *shirt_colour(lab, mask, box)))
+        if n % 25 == 0:
+            print(f"analysing frame {n}/{total}")
+    cap.release()
+    return rows, fps
+
+
+def draw(clean, args):
+    """Pass 3: read the video again and draw the clean tracks on every frame."""
+    by_frame = {f: g for f, g in clean.groupby("frame")}      # frame number -> its rows
+    cap = cv2.VideoCapture(args.source)
+    fps, w, h, total = video_info(cap)
+    writer = open_writer(OUTPUTS / "m2_track.mp4", fps, (w, h))
+    n = 0
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        n += 1
+        rows = by_frame.get(n)
+        tracks = [] if rows is None else list(rows[["id", "x1", "y1", "x2", "y2", "conf"]]
+                                              .itertuples(index=False, name=None))
+        writer.write(draw_tracks(frame, tracks))
+    cap.release()
+    writer.release()
 
 
 def main():
@@ -39,52 +95,25 @@ def main():
     print(f"Loading {args.model} on {args.device} ...")
     model = load_model(args.model)
 
-    cap = cv2.VideoCapture(args.source)
-    if not cap.isOpened():
-        raise SystemExit(f"Could not open {args.source}. Check the file name and folder.")
-    fps, w, h, total = video_info(cap)
-    writer = open_writer(OUTPUTS / "m2_track.mp4", fps, (w, h))
+    # 1. analyse
+    rows, fps = analyse(model, args)
+    raw = to_table(rows)
+    raw.to_csv(OUTPUTS / "tracks.csv", index=False)
 
-    rows = []           # one (frame, id, x1, y1, x2, y2, conf) per player per frame
-    short_id = {}       # the tracker's ID -> 1, 2, 3 ... in the order players first appear
-    n = 0
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        n += 1
-        tracks = track_people(model, frame, tracker=args.tracker, conf=args.conf,
-                              imgsz=args.imgsz, device=args.device)
-
-        # Same crowd filter as Milestone 1: keep only people standing on grass.
-        mask = grass_mask(frame)
-        players = [t for t in tracks if foot_grass_fraction(mask, t[1:5]) >= args.min_grass]
-
-        # Fans get tracker IDs too, so the tracker's numbers grow fast (437, 507 ...).
-        # Give each player a short number instead, in the order they first appear.
-        for t in players:
-            if t[0] not in short_id:
-                short_id[t[0]] = len(short_id) + 1
-        players = [(short_id[t[0]], *t[1:]) for t in players]
-
-        rows.extend((n, *t) for t in players)
-        writer.write(draw_tracks(frame, players))
-        if n % 25 == 0:
-            print(f"frame {n}/{total}: {len(players)} players tracked")
-    cap.release()
-    writer.release()
-
-    # --- pandas part (Skill 7) ---
-    df = to_table(rows)
-    df.to_csv(OUTPUTS / "tracks.csv", index=False)
-    clean = drop_short(df, min_frames=int(fps / 2))              # drop IDs seen for less than 0.5 s
-    clean = smooth(fill_gaps(clean, max_gap=int(fps)), window=5)  # fill holes up to 1 s, then smooth
+    # 2. clean up with pandas (Skill 7)
+    linked, joins = link_broken_tracks(raw, fps)                # one ID per player, even after he was hidden
+    clean = renumber(drop_short(linked, min_frames=int(fps / 2)))   # drop flickers, IDs 1, 2, 3 ...
+    clean = smooth(fill_gaps(clean, max_gap=int(fps)), window=5)    # fill holes up to 1 s, smooth
     clean.to_csv(OUTPUTS / "tracks_clean.csv", index=False)
 
-    summary = id_summary(df)
-    long_ids = summary[summary["seen"] >= fps]          # IDs that lasted at least 1 second
-    print(f"\nDone: {n} frames -> outputs/m2_track.mp4")
-    print(f"Unique player IDs: {len(summary)}  (lasted 1 s or more: {len(long_ids)})")
+    # 3. draw
+    print("drawing the video ...")
+    draw(clean, args)
+
+    summary = id_summary(clean)
+    print(f"\nDone -> outputs/m2_track.mp4")
+    print(f"Tracker IDs: {raw['id'].nunique()}   joined broken tracks: {joins}   "
+          f"players after cleaning: {len(summary)}")
     print(f"Filled {int(clean['filled'].sum())} missing boxes -> outputs/tracks_clean.csv")
     print("\nThe 10 longest tracks:")
     print(summary.head(10).to_string())
