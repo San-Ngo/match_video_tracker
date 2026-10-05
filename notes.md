@@ -1,45 +1,41 @@
 # Learning notes
 
-One short entry per milestone. These notes become the README's "How it works" section and your interview answers.
+What I learned each week while building Match Video Tracker. These notes back up the README's "How it works" section and my interview answers.
 
-## Week 1 · M1 Detect
+## Week 1 — Terminal, Virtual Environments & pytest
 
-- What I changed:
-- What happened:
-- What I learned:
+**What I learned:**
+I learned how to use the terminal to create and manage my project, set up a virtual environment, and install the libraries I need. I also learned how pytest checks my code and how to read an error message to find the file and line where something went wrong.
 
-## Week 2 · M2 Track
+## Week 2 — NumPy for Images
 
-- What I changed:
-- What happened:
-- What I learned:
+**What I learned:**
+I learned that an image is basically a NumPy array, so I can use slicing to crop players and masks to select specific pixels. I also learned why images use height, width, and color channels, and why converting `uint8` to `float32` can prevent incorrect color calculations.
 
-## Week 3 · M3 Teams
+## Week 3 — OpenCV Basics
 
-- What I changed:
-- What happened:
-- What I learned:
+**What I learned:**
+I learned how OpenCV reads images and videos frame by frame, converts between color spaces, and draws boxes, labels, and other shapes. I also learned how HSV can be used to create a mask that separates the football pitch from the rest of the frame.
 
-## Week 4 · M4 Camera motion
+## Week 4 — Ball & Possession
 
-- What I changed:
-- What happened:
-- What I learned:
+**What I learned:**
+I learned that detecting the ball is harder than detecting players because small objects can disappear between frames. I also learned that YOLO sometimes detected spare balls near the boards, so I had to handle those false detections before calculating possession.
 
-## Week 5 · M5 Ball and possession
+## Week 5 — Camera Motion
 
-- What I changed:
-- What happened:
-- What I learned:
+**What I learned:**
+I learned that player movement in the video can be caused by both the players and the moving camera. The goal was to estimate the camera motion so I could separate camera movement from actual player movement.
 
-## Week 6 · M6 Spotlight
+## Week 6 — Spotlight
 
-- What I changed:
-- What happened:
-- What I learned:
+**What I learned:**
+I learned how to highlight a tracked player by drawing a ring and a movement trace underneath them. Drawing these elements underneath the players makes the visualization clearer and keeps the players visible.
 
-## Week 7 · M7 Studio app
+## Week 7 — Studio App
 
-- What I changed:
-- What happened:
-- What I learned:
+**What I built:**
+A Streamlit + JavaScript tactics player (Studio v4): play and pause any moment, draw arrows that run with a player, and keep one output folder per clip.
+
+**What I learned:**
+I learned how to turn the analysis into an interactive app instead of only generating a finished video. I learned how Streamlit and JavaScript can work together to let users pause, play, and draw arrows that follow a player, while keeping each clip's output organized separately.
