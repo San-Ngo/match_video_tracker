@@ -1,6 +1,3 @@
-# Learning notes
-
-What I learned each week while building Match Video Tracker. These notes back up the README's "How it works" section and my interview answers.
 
 ## Week 1 — Terminal, Virtual Environments & pytest
 
