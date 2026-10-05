@@ -142,7 +142,8 @@ def main():
 
     # 3. possession
     team_of = tracks.groupby("id")["team"].first()
-    holder = holders(ball_to_players(ball, tracks), ball["speed"], fps, max_dist=args.dist)
+    holder = holders(ball_to_players(ball, tracks), ball["speed"], fps, max_dist=args.dist,
+                     seen=ball["source"] == "seen")
     team = team_in_possession(holder, team_of, fps)        # kept for a moment after the last touch
     running = pd.DataFrame({0: (team == 0).cumsum(), 1: (team == 1).cumsum()})
     total_frames = (running[0] + running[1]).where(lambda s: s > 0)

@@ -5,6 +5,7 @@
    The ball must also be low and slow: a shot flying past a defender is nobody's.
 2. Flickers are ignored: a player must keep the ball for MIN_TOUCH seconds to count,
    and in a duel the player who had the ball keeps it unless the other is clearly closer.
+   The ball must really be seen at his feet a few times, not only filled in.
 3. A team keeps possession for up to CARRY seconds after its last touch, so a pass in
    the air still counts for the team that made it.
 4. Passes and turnovers come from the order of the players who had the ball.
@@ -20,6 +21,7 @@ MAX_CONTROL = 6         # body heights per second (about 11 m/s): faster = a pas
 FEET = 0.25             # the ball must be at most this far above his feet (body heights)
 STICKY = 0.3            # body heights: how much closer a challenger must be to take the ball
 CARRY = 1.5             # seconds a team keeps possession without a touch (a pass in the air)
+MIN_SEEN = 3            # frames where YOLO really saw the ball during a spell (not just filled in)
 
 
 def ball_to_players(ball, tracks):
@@ -36,13 +38,16 @@ def ball_to_players(ball, tracks):
     return pairs[["frame", "id", "team", "dist", "above"]]
 
 
-def holders(pairs, speed, fps, max_dist=POSSESSION_DIST, min_touch=MIN_TOUCH):
+def holders(pairs, speed, fps, max_dist=POSSESSION_DIST, min_touch=MIN_TOUCH, seen=None):
     """The ID of the player on the ball in each frame (NaN = nobody), without flickers.
 
     A player can have the ball when it is close to his feet, low (not flying past at
     knee height) and slow enough to control (speed = ball_speed, per frame). If two
     players are close, the one who already had it keeps it unless the other one is
     clearly closer (by STICKY body heights): that's how a duel looks to a fan.
+    seen = True for frames where YOLO really saw the ball. A spell on the ball only
+    counts if the ball was seen at least MIN_SEEN times in it: a few filled-in guesses
+    pointing at a white boot are not possession.
     """
     ok = (pairs["dist"] <= max_dist) & (pairs["above"] <= FEET)
     ok &= pairs["frame"].map(speed) <= MAX_CONTROL
@@ -61,7 +66,12 @@ def holders(pairs, speed, fps, max_dist=POSSESSION_DIST, min_touch=MIN_TOUCH):
     holder = pd.Series(holder, index=speed.index, dtype=float)
     run = (holder != holder.shift()).cumsum()              # number each run of the same holder
     run_len = holder.groupby(run).transform("size")
-    return holder.where(run_len >= max(1, round(min_touch * fps)))
+    holder = holder.where(run_len >= max(1, round(min_touch * fps)))
+    if seen is not None:
+        spell = (holder != holder.shift()).cumsum()
+        sightings = seen.reindex(holder.index, fill_value=False).astype(int).groupby(spell).transform("sum")
+        holder = holder.where(sightings >= MIN_SEEN)
+    return holder
 
 
 def team_in_possession(holder, team_of, fps, carry_s=CARRY):

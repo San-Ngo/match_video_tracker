@@ -37,3 +37,11 @@ def test_events_tell_passes_from_turnovers():
     holder = pd.Series([7, 7, 8, 8, 20, 20], index=range(1, 7), dtype=float)
     ev = events(spells(holder), {7: 0, 8: 0, 20: 1})
     assert list(ev["event"]) == ["pass", "turnover"]
+
+
+def test_a_spell_on_guesses_alone_is_not_possession():
+    frames = range(1, 11)
+    speed = pd.Series(2.0, index=frames)
+    seen = pd.Series([True] + [False] * 9, index=frames)          # seen once, then only filled in
+    h = holders(pairs_for(frames, {7: 0.2}), speed, fps=10, seen=seen)
+    assert h.isna().all()
