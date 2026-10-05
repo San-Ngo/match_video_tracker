@@ -83,6 +83,16 @@ def track_camera(frames_and_boxes):
     return pd.DataFrame(rows).set_index("frame")
 
 
+def from_pitch(points, camera, frame):
+    """The opposite of to_pitch: turn pitch coordinates [(x, y), ...] into pixels of `frame`.
+    Used to draw something that lies on the pitch (a player's trail) while the camera moves."""
+    row = camera.loc[frame]
+    to_first = np.array([[row[f"to_first_{i}{j}"] for j in range(3)] for i in range(2)] + [[0, 0, 1]])
+    pts = np.column_stack([np.asarray(points, dtype=float), np.ones(len(points))])
+    back = pts @ np.linalg.inv(to_first).T
+    return back[:, :2]
+
+
 def to_pitch(df, camera, x="x", y="y"):
     """Add pitch_x and pitch_y: where each (x, y) would be in the clip's first frame."""
     def get(name):                              # this column of the camera table, for every row of df
