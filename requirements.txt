@@ -1,0 +1,5 @@
+# Install with: pip install -r requirements.txt
+numpy>=2.0
+opencv-python>=4.10
+ultralytics>=8.4
+pytest>=8.0

@@ -1,1 +1,51 @@
-# match_video_tracker
+# Match Video Tracker
+
+Football match analysis from broadcast video: detect every player, track them across frames, split them into teams, follow the ball and draw broadcast-style player spotlights.
+
+> 🚧 Work in progress, built one milestone a week while learning computer vision.
+
+## Roadmap
+
+| Milestone | What it does | Status |
+| --- | --- | --- |
+| M1 Detect | Find the players in a frame and remove the crowd | 🔨 In progress |
+| M2 Track | Keep one ID per player across frames | ⏳ |
+| M3 Teams | Split the players into two teams by shirt colour | ⏳ |
+| M4 Ball and possession | Find the ball and compute possession | ⏳ |
+| M5 Camera motion | Separate camera movement from player movement | ⏳ |
+| M6 Spotlight | Ring and trace under a player, drawn under the players | ⏳ |
+| M7 Studio app | Click a player in a Streamlit app and export an mp4 | ⏳ |
+
+Releases: v1 = M1–M3, v2 = M4–M6, v3 = M7.
+
+## Tech stack
+
+Python, NumPy, OpenCV, Ultralytics YOLO and pytest so far. Tracking (BoT-SORT), pandas, scikit-learn and Streamlit join as the milestones need them.
+
+## Setup (macOS)
+
+```bash
+git clone https://github.com/San-Ngo/match_video_tracker.git
+cd match_video_tracker
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pytest -q
+```
+
+Put your own match clips in `data/`. Videos and model weights stay on your computer and are not stored in the repo.
+
+## Project structure
+
+```
+match_video_tracker/   the code, one module per job
+tests/                 pytest tests
+data/                  your clips (not on GitHub)
+outputs/               results (not on GitHub)
+practice/              small learning scripts
+notes.md               what I learned each week
+```
+
+## License
+
+AGPL-3.0, the same license as Ultralytics YOLO, which this project builds on.

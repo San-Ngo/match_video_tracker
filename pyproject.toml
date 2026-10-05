@@ -1,0 +1,4 @@
+# Settings for pytest: run "pytest -q" from the project folder.
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

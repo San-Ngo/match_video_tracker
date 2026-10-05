@@ -1,0 +1,18 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Mac
+.DS_Store
+
+# Big files stay on your computer, not on GitHub
+data/*
+!data/.gitkeep
+outputs/*
+!outputs/.gitkeep
+runs/
+*.pt
+*.mp4
+*.mov
