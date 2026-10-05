@@ -46,7 +46,11 @@ def main():
     parser.add_argument("source", help="the same video you gave to m2 - m5")
     parser.add_argument("--player", type=int, default=None, help="the player's ID (default: most time on the ball)")
     parser.add_argument("--seconds", type=float, default=TRAIL_SECONDS, help="length of the trail in seconds")
+    parser.add_argument("--out", default="outputs", help="folder for the results (analyse.py uses outputs/<clip name>)")
     args = parser.parse_args()
+    global OUTPUTS
+    OUTPUTS = Path(args.out)                                # every file of this run goes here
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
 
     cap = cv2.VideoCapture(args.source)
     if not cap.isOpened():

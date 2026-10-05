@@ -16,3 +16,6 @@ runs/
 *.pt
 *.mp4
 *.mov
+
+# The browser copies of the clips (made by the app)
+static/

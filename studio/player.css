@@ -1,0 +1,33 @@
+.mvt { font-family: var(--st-font, "Source Sans Pro", sans-serif); color: var(--st-text-color, #222); }
+.stage { position: relative; width: 100%; background: #000; border-radius: 8px; overflow: hidden; line-height: 0; }
+.stage video { width: 100%; height: auto; display: block; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+.stage .big { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 72px; height: 72px;
+  border-radius: 50%; border: 0; background: rgba(0, 0, 0, .55); color: #fff; font-size: 30px; cursor: pointer;
+  line-height: 72px; padding: 0; }
+.stage .big.hidden { display: none; }
+.stage .badge { position: absolute; top: 10px; right: 10px; line-height: 1.2; background: rgba(0, 0, 0, .65); color: #fff;
+  padding: 4px 10px; border-radius: 6px; font-size: 13px; }
+.stage .badge.hidden { display: none; }
+.bar { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; }
+.bar input[type=range] { flex: 1; accent-color: var(--st-primary-color, #ff4b4b); }
+.bar .time { font-variant-numeric: tabular-nums; font-size: 13px; min-width: 120px; text-align: right; }
+button, select { font: inherit; font-size: 14px; border: 1px solid rgba(128, 128, 128, .4); border-radius: 6px;
+  background: var(--st-secondary-background-color, #f0f2f6); color: inherit; padding: 4px 10px; cursor: pointer; }
+button:hover { border-color: var(--st-primary-color, #ff4b4b); }
+button.on { background: var(--st-primary-color, #ff4b4b); color: #fff; border-color: transparent; }
+button:disabled { opacity: .4; cursor: default; }
+.play { min-width: 44px; font-size: 16px; }
+.tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0; }
+.tools .sep { width: 1px; height: 24px; background: rgba(128, 128, 128, .4); margin: 0 4px; }
+.swatch { width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 2px solid rgba(128, 128, 128, .5); }
+.swatch.on { border-color: var(--st-text-color, #222); box-shadow: 0 0 0 2px var(--st-background-color, #fff) inset; }
+.tools label { font-size: 13px; display: flex; align-items: center; gap: 4px; }
+.hint { font-size: 14px; min-height: 22px; margin: 2px 0 6px; opacity: .85; }
+.hint b { color: var(--st-primary-color, #ff4b4b); }
+.list { font-size: 14px; }
+.list .row { display: flex; align-items: center; gap: 8px; padding: 3px 0; border-bottom: 1px solid rgba(128, 128, 128, .15); }
+.list .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.list .what { flex: 1; cursor: pointer; }
+.list .what:hover { text-decoration: underline; }
+.list button { padding: 0 8px; }

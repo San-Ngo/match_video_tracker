@@ -71,7 +71,11 @@ def plot(camera, tracks, fps, path):
 def main():
     parser = argparse.ArgumentParser(description="Milestone 4: measure the camera's movement")
     parser.add_argument("source", help="the same video you gave to m2 and m3")
+    parser.add_argument("--out", default="outputs", help="folder for the results (analyse.py uses outputs/<clip name>)")
     args = parser.parse_args()
+    global OUTPUTS
+    OUTPUTS = Path(args.out)                                # every file of this run goes here
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
 
     cap = cv2.VideoCapture(args.source)
     if not cap.isOpened():

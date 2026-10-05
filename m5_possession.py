@@ -103,7 +103,11 @@ def main():
     parser.add_argument("--imgsz", type=int, default=None,
                         help="default: 640 per tile for ball.pt, 1280 for the whole frame with yolo26m.pt")
     parser.add_argument("--device", default=None, help="mps or cpu (default: mps when available)")
+    parser.add_argument("--out", default="outputs", help="folder for the results (analyse.py uses outputs/<clip name>)")
     args = parser.parse_args()
+    global OUTPUTS
+    OUTPUTS = Path(args.out)                                # every file of this run goes here
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
 
     cap = cv2.VideoCapture(args.source)
     if not cap.isOpened():

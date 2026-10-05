@@ -88,9 +88,12 @@ def main():
     parser.add_argument("--imgsz", type=int, default=1280, help="bigger finds far-away players but is slower")
     parser.add_argument("--min-grass", type=float, default=0.15, help="share of grass needed at the feet")
     parser.add_argument("--device", default=None, help="mps or cpu (default: mps when available)")
+    parser.add_argument("--out", default="outputs", help="folder for the results (analyse.py uses outputs/<clip name>)")
     args = parser.parse_args()
+    global OUTPUTS
+    OUTPUTS = Path(args.out)                                # every file of this run goes here
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
 
-    OUTPUTS.mkdir(exist_ok=True)
     args.device = args.device or pick_device()
     print(f"Loading {args.model} on {args.device} ...")
     model = load_model(args.model)

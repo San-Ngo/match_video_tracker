@@ -87,8 +87,13 @@ def draw(df, source, colors, names):
 def main():
     parser = argparse.ArgumentParser(description="Milestone 3: split the players into two teams")
     parser.add_argument("source", help="the same video you gave to m2_track.py")
-    parser.add_argument("--tracks", default=str(OUTPUTS / "tracks_clean.csv"), help="M2's clean tracks")
+    parser.add_argument("--tracks", default=None, help="M2's clean tracks (default: tracks_clean.csv in --out)")
+    parser.add_argument("--out", default="outputs", help="folder for the results (analyse.py uses outputs/<clip name>)")
     args = parser.parse_args()
+    global OUTPUTS
+    OUTPUTS = Path(args.out)                                # every file of this run goes here
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
+    args.tracks = args.tracks or str(OUTPUTS / "tracks_clean.csv")
 
     cap = cv2.VideoCapture(args.source)
     if not cap.isOpened():

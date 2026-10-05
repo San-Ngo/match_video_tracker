@@ -19,8 +19,9 @@ Football match analysis from broadcast video: detect every player, track them ac
 | M5 Ball and possession | Find the ball and compute possession | ✅ Done |
 | M6 Spotlight | Ring and trace under a player, drawn under the players | ✅ Done |
 | M7 Studio app | Click a player in a Streamlit app and export an mp4 | ✅ Done |
+| M8 Tactics player | Play and pause the clip, draw pass lines, triangles, zones and arrows that move with the players | ✅ Done |
 
-Releases: v1 = M1–M3 ✅, v2 = M4–M6 ✅, v3 = M7. (M4 and M5 swapped places: the ball needs the camera motion.)
+Releases: v1 = M1–M3 ✅, v2 = M4–M6 ✅, v3 = M7 ✅, v4 = M8. (M4 and M5 swapped places: the ball needs the camera motion.)
 
 ## How it works (v1)
 
@@ -39,7 +40,7 @@ Releases: v1 = M1–M3 ✅, v2 = M4–M6 ✅, v3 = M7. (M4 and M5 swapped places
 
 ## Tech stack
 
-Python, NumPy, OpenCV (optical flow, RANSAC), Ultralytics YOLO26, TrackTrack and BoT-SORT tracking, pandas, scikit-learn (K-Means), matplotlib and pytest. Streamlit for the Studio app.
+Python, NumPy, OpenCV (optical flow, RANSAC), Ultralytics YOLO26, TrackTrack and BoT-SORT tracking, pandas, scikit-learn (K-Means), matplotlib and pytest. Streamlit and a JavaScript canvas player for the Studio app, ffmpeg (imageio-ffmpeg) for H.264 video.
 
 ## Setup (macOS)
 
@@ -74,7 +75,12 @@ streamlit run app.py
 - **M3** starts from M2's `tracks_clean.csv`, so run M2 on the same clip first. There is no YOLO in this step, so it takes well under a minute. It saves `outputs/m3_teams.mp4` with every marker in its team's shirt colour, `outputs/m3_check.jpg` (3 frames to check the teams by eye), `outputs/teams.csv` (one row per player) and `outputs/tracks_teams.csv` (the tracks with a team column).
 - **M4** follows the camera (no YOLO, fast) and saves `outputs/camera.csv`, `outputs/tracks_pitch.csv` (every player's feet in pitch coordinates) and `outputs/m4_camera.png` (the camera pan, and one player's path with and without it).
 - **M5** runs YOLO for the ball only (about a minute) and saves `outputs/m5_possession.mp4` (ball marker, a marker over the player on the ball, possession bar), `outputs/ball.csv`, `outputs/possession.csv` and `outputs/events.csv` (passes and turnovers). Add `--reuse` to skip YOLO and try other settings, for example `python m5_possession.py data/clip.mov --reuse --dist 0.75`.
-- **M7** (`streamlit run app.py`) opens the Studio in your browser: drag the slider through the clip, click any player to put the spotlight on him, read possession and his time on the ball, and export his spotlight clip as an mp4 (saved in `outputs/` and downloadable from the page). It uses what M2–M5 saved in `outputs/`.
+- **The Studio app** (M7 and M8). First analyse each clip once: `python analyse.py data/clip2.mov` runs M2 - M5 for that clip into its own folder, `outputs/clip2/`, so clips never mix (or press "Analyse this clip now" in the app). Then `streamlit run app.py` opens it in your browser:
+  - **Play / pause** the clip (space bar), step one frame with ← →, play at 0.25× or 0.5×.
+  - **Pause and draw**: 👆 Spotlight (a ring and a trail under one player), ➡ Pass (passer, then receiver), △ Triangle (3 players), ⬠ Zone (3 or more players, then Enter), ↗ Arrow (start it on a player and it runs with him, or on the grass) and ／ Line (2 spots on the grass). Pass lines, triangles and zones are tied to the players, so they move and change shape with them when you press play. Arrows and lines are kept in pitch coordinates (M4), so they stay on the same grass while the camera pans. Everything is drawn on grass pixels only, so the players stay in front.
+  - **Present**: with "Pause at each drawing" on, the video stops on each drawing for a few seconds and then plays on, like a TV analyst.
+  - Drawings are saved per clip in `outputs/<clip>/drawings.json` (plain JSON). **Export** writes an H.264 mp4 with the drawings, the markers, the spotlight and the pauses, which plays on any phone.
+  - How it works: the player is a small web page (`studio/player.js`) inside Streamlit. Python sends it a light H.264 copy of the clip and one JSON file with every player's box and the camera per frame (`match_video_tracker/web.py`); the browser draws on a canvas over the video.
 - **M6** saves `outputs/m6_spotlight.mp4` and `outputs/m6_spotlight.jpg` (before and after). By default it follows the player who had the ball the most; pick anyone with `--player 8`, and change the trail with `--seconds 5`.
 
 ## Known limits
@@ -102,7 +108,9 @@ m3_teams.py            Milestone 3: split the players into two teams
 m4_camera.py           Milestone 4: measure the camera's movement
 m5_possession.py       Milestone 5: find the ball and who has it
 m6_spotlight.py        Milestone 6: ring and trail under one player
-app.py                 Milestone 7: the Studio app (streamlit run app.py)
+analyse.py             runs M2 - M5 on one clip, into outputs/<clip name>/
+app.py                 Milestones 7-8: the Studio app (streamlit run app.py)
+studio/                the video player of the app (HTML, CSS and JavaScript)
 notes.md               what I learned each week
 ```
 
